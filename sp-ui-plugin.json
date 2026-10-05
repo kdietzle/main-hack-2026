@@ -1,0 +1,28 @@
+{
+    "version": 1,
+    "manifest": {
+        "alias": "main-hack-villanova",
+        "name": {
+            "en": "main-hack-villanova"
+        },
+        "description": {
+            "en": "main-hack-villanova"
+        },
+        "apiScopes": [
+            "sp:scopes:all"
+        ],
+        "contentSecurityPolicies": {},
+        "permissionPolicy": {},
+        "iframeAllow": {},
+        "state": "ENABLED",
+        "slots": [
+            {
+                "slotId": "full-page"
+            }
+        ]
+    },
+    "build": {
+        "outDir": "./dist/main-hack-villanova/browser",
+        "port": 4200
+    }
+}

@@ -1,0 +1,503 @@
+<div class="whatif-page">
+
+  <header class="whatif-hero">
+    <div>
+      <div class="whatif-kicker">IDENTITY WHAT-IF</div>
+
+      <h1>See the identity impact before making the change.</h1>
+
+      <p>
+        Select an identity and a proposed department to preview how an
+        organizational move could affect the identity and its access.
+      </p>
+    </div>
+
+    <div class="whatif-api-status">
+      <span
+        class="whatif-status-dot"
+        [class.ready]="plugin.apiReady()"
+      ></span>
+
+      {{
+        plugin.apiReady()
+          ? 'SailPoint API connected'
+          : 'Connecting to SailPoint'
+      }}
+    </div>
+  </header>
+
+
+  @if (error()) {
+    <p-message severity="error">
+      {{ error() }}
+    </p-message>
+  }
+
+
+  @if (loading()) {
+
+    <section class="whatif-panel">
+
+      <p-skeleton
+        width="45%"
+        height="2rem"
+      ></p-skeleton>
+
+      <p-skeleton
+        width="100%"
+        height="4rem"
+      ></p-skeleton>
+
+      <p-skeleton
+        width="100%"
+        height="4rem"
+      ></p-skeleton>
+
+    </section>
+
+  } @else {
+
+    <section class="whatif-panel">
+
+      <div class="whatif-panel-heading">
+
+        <div>
+          <span class="whatif-step">1</span>
+          <h2>Build a scenario</h2>
+        </div>
+
+        <button
+          type="button"
+          class="whatif-link-button"
+          (click)="resetSimulation()"
+        >
+          Reset
+        </button>
+
+      </div>
+
+
+      <div class="whatif-form-grid">
+
+        <!-- Identity -->
+
+        <div class="whatif-field">
+
+          <label for="identity">
+            Identity
+          </label>
+
+          <p-select
+            inputId="identity"
+            [options]="identityOptions()"
+            [ngModel]="selectedIdentityId()"
+            (ngModelChange)="onIdentityChange($event)"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Select an identity"
+            [filter]="true"
+            filterBy="name"
+            [showClear]="true"
+            appendTo="body"
+          ></p-select>
+
+        </div>
+
+
+        <div
+          class="whatif-arrow"
+          aria-hidden="true"
+        >
+          →
+        </div>
+
+
+        <!-- Destination Department -->
+
+        <div class="whatif-field">
+
+          <label for="department">
+            Proposed department
+          </label>
+
+          <p-select
+            inputId="department"
+            [options]="departmentOptions()"
+            [ngModel]="proposedDepartmentName()"
+            (ngModelChange)="onDepartmentChange($event)"
+            placeholder="Select a proposed department"
+            [filter]="true"
+            [showClear]="true"
+            appendTo="body"
+          ></p-select>
+
+        </div>
+
+      </div>
+
+
+      @if (
+        selectedIdentity() &&
+        proposedDepartmentName() &&
+        !hasValidScenario()
+      ) {
+
+        <p-message severity="warn">
+          The selected identity is already in this department.
+          Choose another department to run a What-If scenario.
+        </p-message>
+
+      }
+
+
+      <div class="whatif-actions">
+
+        <button
+          type="button"
+          class="whatif-primary-button"
+          [disabled]="!hasValidScenario()"
+          (click)="runSimulation()"
+        >
+          Run What-If
+        </button>
+
+      </div>
+
+    </section>
+
+  }
+
+
+  @if (simulationRun() && selectedIdentity(); as identity) {
+
+    <section class="whatif-results">
+
+
+      <!-- Result Heading -->
+
+      <div class="whatif-result-heading">
+
+        <div class="whatif-identity">
+
+          <p-avatar
+            [label]="initials(identity.name)"
+            shape="circle"
+            size="xlarge"
+          ></p-avatar>
+
+          <div>
+
+            <div class="whatif-kicker">
+              SIMULATION RESULT
+            </div>
+
+            <h2>
+              {{ identity.name }}
+            </h2>
+
+            <p>
+              {{ attr(identity, 'department') }}
+              →
+              {{ proposedDepartment() }}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="whatif-summary">
+
+          <strong>
+            {{ changedItems().length }}
+          </strong>
+
+          <span>
+            change{{ changedItems().length === 1 ? '' : 's' }}
+            identified
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- Review Banner -->
+
+      <div class="whatif-callout">
+
+        <div class="whatif-callout-icon">
+          !
+        </div>
+
+        <div>
+
+          <strong>
+            Review recommended
+          </strong>
+
+          <p>
+            This hypothetical department change could affect the
+            identity's organizational context and access.
+            No SailPoint data has been changed.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- Attribute Comparison -->
+
+      <div class="whatif-comparison">
+
+        <div class="whatif-column-heading">
+          Attribute
+        </div>
+
+        <div class="whatif-column-heading">
+          Current
+        </div>
+
+        <div class="whatif-column-heading">
+          Proposed
+        </div>
+
+        <div class="whatif-column-heading">
+          Result
+        </div>
+
+
+        @for (row of changes(); track row.field) {
+
+          <div class="whatif-field-name">
+            {{ row.field }}
+          </div>
+
+          <div class="whatif-current-value">
+            {{ row.current }}
+          </div>
+
+          <div
+            class="whatif-proposed-value"
+            [class.changed]="row.status === 'changed'"
+          >
+            {{ row.proposed }}
+          </div>
+
+          <div>
+
+            <p-tag
+              [value]="
+                row.status === 'changed'
+                  ? 'Changed'
+                  : 'Unchanged'
+              "
+              [severity]="changeSeverity(row.status)"
+            ></p-tag>
+
+          </div>
+
+        }
+
+      </div>
+
+
+      <!-- Access Impact -->
+
+      <div class="access-impact">
+
+        <div class="access-impact-header">
+
+          <span class="whatif-step">
+            2
+          </span>
+
+          <div>
+
+            <h3>
+              Access impact preview
+            </h3>
+
+            <p>
+              Hypothetical access categories based on the
+              proposed organizational change.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="access-impact-grid">
+
+
+          <!-- KEEP -->
+
+          <div class="access-card keep">
+
+            <div class="access-card-title">
+
+              <span class="impact-icon">
+                ✓
+              </span>
+
+              Keep
+
+            </div>
+
+            @for (item of accessImpact(); track item.name) {
+
+              @if (item.impact === 'keep') {
+
+                <div class="access-item">
+                  {{ item.name }}
+                </div>
+
+              }
+
+            }
+
+          </div>
+
+
+          <!-- ADD -->
+
+          <div class="access-card add">
+
+            <div class="access-card-title">
+
+              <span class="impact-icon">
+                +
+              </span>
+
+              Potential New Access
+
+            </div>
+
+            @for (item of accessImpact(); track item.name) {
+
+              @if (item.impact === 'add') {
+
+                <div class="access-item">
+                  {{ item.name }}
+                </div>
+
+              }
+
+            }
+
+          </div>
+
+
+          <!-- REVIEW -->
+
+          <div class="access-card review">
+
+            <div class="access-card-title">
+
+              <span class="impact-icon">
+                !
+              </span>
+
+              Access to Review
+
+            </div>
+
+            @for (item of accessImpact(); track item.name) {
+
+              @if (item.impact === 'review') {
+
+                <div class="access-item">
+                  {{ item.name }}
+                </div>
+
+              }
+
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Destination Department Context -->
+
+      <div class="whatif-peer-panel">
+
+        <div>
+
+          <span class="whatif-step">
+            3
+          </span>
+
+          <h3>
+            Destination department
+          </h3>
+
+        </div>
+
+
+        <div class="whatif-stat-grid">
+
+          <div class="whatif-stat">
+
+            <strong>
+              {{ proposedPeers().length }}
+            </strong>
+
+            <span>
+              identities in this department
+            </span>
+
+          </div>
+
+
+          <div class="whatif-stat">
+
+            <strong>
+              {{ proposedDepartment() }}
+            </strong>
+
+            <span>
+              proposed department
+            </span>
+
+          </div>
+
+
+          <div class="whatif-stat">
+
+            <strong>
+              {{ attr(identity, 'department') }}
+            </strong>
+
+            <span>
+              current department
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Disclaimer -->
+
+      <footer class="whatif-disclaimer">
+
+        Demo simulation based on identity attributes returned by
+        SailPoint. Access-impact categories shown here are illustrative.
+        No provisioning, access assignment, identity update, or
+        department change has been performed.
+
+      </footer>
+
+    </section>
+
+  }
+
+</div>
